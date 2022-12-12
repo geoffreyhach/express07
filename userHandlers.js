@@ -42,6 +42,7 @@ const getUsers = (req, res) => {
 
 const getUserById = (req, res) => {
     const id = parseInt(req.params.id);
+    console.log(id);
 
     database
         .query(
@@ -53,6 +54,27 @@ const getUserById = (req, res) => {
                 res.json(users[0]);
             } else {
                 res.status(404).send("Not Found");
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+            res.status(500).send("Error retrieving data from database");
+        });
+};
+
+const getUserByEmailWithPasswordAndPassToNext = (req, res, next) => {
+    const { email } = req.body;
+
+    database
+        .query("select * from users where email = ?", [email])
+        .then(([users]) => {
+            console.log(users[0]);
+            if (users[0] != null) {
+                req.user = users[0];
+
+                next();
+            } else {
+                res.sendStatus(401);
             }
         })
         .catch((err) => {
@@ -85,7 +107,7 @@ const updateUser = (req, res) => {
 
     database
         .query(
-            "update movies set firstname = ?, lastname = ?, email = ?, city = ?, language = ? where id = ?",
+            "update users set firstname = ?, lastname = ?, email = ?, city = ?, language = ? where id = ?",
             [firstname, lastname, email, city, language, id]
         )
         .then(([result]) => {
@@ -125,4 +147,5 @@ module.exports = {
     postUser,
     updateUser,
     deleteUser,
+    getUserByEmailWithPasswordAndPassToNext,
 };
